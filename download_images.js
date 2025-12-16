@@ -1,6 +1,16 @@
 /**
  * 下载塔罗牌图片到本地 assets 目录
  * 
+ * 数据源更换为: https://github.com/kylev/tarot
+ * 这是一个完整且命名规范的 Rider-Waite-Smith 牌组源。
+ * 
+ * 命名规则:
+ * m00-m21: 大阿卡纳 (Major Arcana)
+ * w01-w14: 权杖 (Wands)
+ * c01-c14: 圣杯 (Cups)
+ * s01-s14: 宝剑 (Swords)
+ * p01-p14: 星币 (Pentacles)
+ * 
  * 运行方法: 
  * node download_images.js
  */
@@ -14,10 +24,10 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 远程源 (Sacred Texts PKT)
-const REMOTE_BASE_URL = "https://www.sacred-texts.com/tarot/pkt/img";
+// 远程源 (High quality RWS scans from kylev/tarot)
+const REMOTE_BASE_URL = "https://raw.githubusercontent.com/kylev/tarot/master/public/cards";
 
-// 本地目标目录 (适用于 Vite/React 项目结构)
+// 本地目标目录
 const TARGET_DIR = path.join(__dirname, 'assets', 'cards');
 
 // 确保目录存在
@@ -29,13 +39,15 @@ if (!fs.existsSync(TARGET_DIR)) {
 // 定义需要下载的文件列表
 const files = [];
 
-// 1. 大阿卡纳 (ar00.jpg - ar21.jpg)
+// 1. 大阿卡纳 (m00.jpg - m21.jpg)
 for (let i = 0; i <= 21; i++) {
-  files.push(`ar${i.toString().padStart(2, '0')}.jpg`);
+  files.push(`m${i.toString().padStart(2, '0')}.jpg`);
 }
 
-// 2. 小阿卡纳 (wands=wa, cups=cu, swords=sw, pentacles=pe) - 01-14
-const suits = ['wa', 'cu', 'sw', 'pe'];
+// 2. 小阿卡纳
+// w=Wands, c=Cups, s=Swords, p=Pentacles
+// 01(Ace) - 14(King)
+const suits = ['w', 'c', 's', 'p'];
 suits.forEach(suit => {
   for (let i = 1; i <= 14; i++) {
     files.push(`${suit}${i.toString().padStart(2, '0')}.jpg`);
@@ -78,8 +90,8 @@ async function downloadAll() {
   let successCount = 0;
   let failCount = 0;
 
-  // 限制并发数为 5，防止触发网站限流
-  const batchSize = 5;
+  // 限制并发数为 10
+  const batchSize = 10;
   for (let i = 0; i < files.length; i += batchSize) {
     const batch = files.slice(i, i + batchSize);
     try {
@@ -87,7 +99,7 @@ async function downloadAll() {
       successCount += batch.length;
     } catch (err) {
       console.error(`\nBatch error:`, err);
-      failCount += batch.length; // 简化处理，假设这批都失败
+      failCount += batch.length;
     }
   }
 

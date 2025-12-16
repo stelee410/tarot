@@ -7,7 +7,8 @@ import { GenerateContentResponse } from "@google/genai";
 
 // --- Helpers ---
 
-const REMOTE_BASE_URL = "https://www.sacred-texts.com/tarot/pkt/img";
+// 使用更稳定、完整的 Github 源
+const REMOTE_BASE_URL = "https://raw.githubusercontent.com/kylev/tarot/master/public/cards";
 const LOCAL_BASE_URL = "/assets/cards";
 
 const getCardFilename = (card: DrawnCard | TarotCard): string => {
@@ -15,14 +16,14 @@ const getCardFilename = (card: DrawnCard | TarotCard): string => {
   let numStr = card.number.toString().padStart(2, '0');
 
   if (card.arcana === ArcanaType.MAJOR) {
-    prefix = 'ar';
+    prefix = 'm'; // New naming: m00 - m21
   } else {
     // Suit mapping
     switch (card.suit) {
-      case Suit.WANDS: prefix = 'wa'; break;
-      case Suit.CUPS: prefix = 'cu'; break;
-      case Suit.SWORDS: prefix = 'sw'; break;
-      case Suit.PENTACLES: prefix = 'pe'; break;
+      case Suit.WANDS: prefix = 'w'; break;     // w01 - w14
+      case Suit.CUPS: prefix = 'c'; break;      // c01 - c14
+      case Suit.SWORDS: prefix = 's'; break;    // s01 - s14
+      case Suit.PENTACLES: prefix = 'p'; break; // p01 - p14
       default: return '';
     }
   }
