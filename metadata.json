@@ -1,0 +1,5 @@
+{
+  "name": "Quantum Tarot AI",
+  "description": "基于量子真空涨落的真随机数塔罗占卜，结合 Gemini AI 进行深度个性化解读。",
+  "requestFramePermissions": []
+}
