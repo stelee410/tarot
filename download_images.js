@@ -1,15 +1,13 @@
 /**
  * 下载塔罗牌图片到本地 assets 目录
  * 
- * 数据源更换为: https://github.com/kylev/tarot
- * 这是一个完整且命名规范的 Rider-Waite-Smith 牌组源。
+ * 数据源更换为: https://github.com/patriciarealini/tarot
  * 
- * 命名规则:
- * m00-m21: 大阿卡纳 (Major Arcana)
- * w01-w14: 权杖 (Wands)
- * c01-c14: 圣杯 (Cups)
- * s01-s14: 宝剑 (Swords)
- * p01-p14: 星币 (Pentacles)
+ * 命名规则 (Kebab-case):
+ * 使用卡牌的英文全名，转换为小写，空格替换为连字符。
+ * 例如: 
+ * "The Fool" -> "the-fool.jpg"
+ * "Ace of Wands" -> "ace-of-wands.jpg"
  * 
  * 运行方法: 
  * node download_images.js
@@ -24,8 +22,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// 远程源 (High quality RWS scans from kylev/tarot)
-const REMOTE_BASE_URL = "https://raw.githubusercontent.com/kylev/tarot/master/public/cards";
+// 远程源
+const REMOTE_BASE_URL = "https://raw.githubusercontent.com/patriciarealini/tarot/master/images/deck";
 
 // 本地目标目录
 const TARGET_DIR = path.join(__dirname, 'assets', 'cards');
@@ -36,22 +34,31 @@ if (!fs.existsSync(TARGET_DIR)) {
   fs.mkdirSync(TARGET_DIR, { recursive: true });
 }
 
-// 定义需要下载的文件列表
+// 定义卡牌名称列表 (必须与 data.ts 中的 EnglishName 对应的 kebab-case 格式一致)
+const majors = [
+  "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", 
+  "The Hierophant", "The Lovers", "The Chariot", "Strength", "The Hermit", 
+  "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance", 
+  "The Devil", "The Tower", "The Star", "The Moon", "The Sun", 
+  "Judgement", "The World"
+];
+
+const ranks = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Page', 'Knight', 'Queen', 'King'];
+const suits = ['Wands', 'Cups', 'Swords', 'Pentacles'];
+
 const files = [];
 
-// 1. 大阿卡纳 (m00.jpg - m21.jpg)
-for (let i = 0; i <= 21; i++) {
-  files.push(`m${i.toString().padStart(2, '0')}.jpg`);
-}
+// 1. 生成大阿卡纳文件名
+majors.forEach(name => {
+  files.push(name.toLowerCase().replace(/\s+/g, '-') + '.jpg');
+});
 
-// 2. 小阿卡纳
-// w=Wands, c=Cups, s=Swords, p=Pentacles
-// 01(Ace) - 14(King)
-const suits = ['w', 'c', 's', 'p'];
+// 2. 生成小阿卡纳文件名
 suits.forEach(suit => {
-  for (let i = 1; i <= 14; i++) {
-    files.push(`${suit}${i.toString().padStart(2, '0')}.jpg`);
-  }
+  ranks.forEach(rank => {
+    const name = `${rank} of ${suit}`;
+    files.push(name.toLowerCase().replace(/\s+/g, '-') + '.jpg');
+  });
 });
 
 // 下载函数
@@ -90,7 +97,7 @@ async function downloadAll() {
   let successCount = 0;
   let failCount = 0;
 
-  // 限制并发数为 10
+  // 限制并发数
   const batchSize = 10;
   for (let i = 0; i < files.length; i += batchSize) {
     const batch = files.slice(i, i + batchSize);
