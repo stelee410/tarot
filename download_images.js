@@ -5,9 +5,14 @@
  * node download_images.js
  */
 
-const fs = require('fs');
-const https = require('https');
-const path = require('path');
+import fs from 'fs';
+import https from 'https';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// 在 ES Module 中获取 __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // 远程源 (Sacred Texts PKT)
 const REMOTE_BASE_URL = "https://www.sacred-texts.com/tarot/pkt/img";
@@ -89,7 +94,7 @@ async function downloadAll() {
   console.log(`\n\n所有任务完成!`);
   console.log(`成功: ${successCount}`);
   console.log(`失败: ${failCount}`);
-  console.log(`\n现在你的 App.tsx 已经配置为从 /assets/cards 读取图片了。`);
+  console.log(`\n如果不使用本地图片，App 会自动回退到远程源。`);
 }
 
 downloadAll();

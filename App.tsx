@@ -7,12 +7,10 @@ import { GenerateContentResponse } from "@google/genai";
 
 // --- Helpers ---
 
-// Map internal card data to local asset filenames
-const getCardImageUrl = (card: DrawnCard | TarotCard): string => {
-  // 指向本地资源目录 (需先运行 node download_images.js 下载图片)
-  // 如果是 Vite/Webpack 等环境，通常放在 public/assets/cards 或根目录 assets/cards
-  const baseUrl = "/assets/cards";
-  
+const REMOTE_BASE_URL = "https://www.sacred-texts.com/tarot/pkt/img";
+const LOCAL_BASE_URL = "/assets/cards";
+
+const getCardFilename = (card: DrawnCard | TarotCard): string => {
   let prefix = '';
   let numStr = card.number.toString().padStart(2, '0');
 
@@ -28,8 +26,7 @@ const getCardImageUrl = (card: DrawnCard | TarotCard): string => {
       default: return '';
     }
   }
-
-  return `${baseUrl}/${prefix}${numStr}.jpg`;
+  return `${prefix}${numStr}.jpg`;
 };
 
 const getSuitIcon = (card: DrawnCard | TarotCard) => {
@@ -53,13 +50,35 @@ const CardVisual = ({ card, isReversed, isRevealed, onClick, small = false, clas
   small?: boolean,
   className?: string
 }) => {
-  const [imgError, setImgError] = useState(false);
-  const imageUrl = card ? getCardImageUrl(card) : '';
+  // Image Loading Logic:
+  // 1. Try Local URL first
+  // 2. On Error -> Try Remote URL
+  // 3. On Error -> Show Fallback Icon
+  const [imgSrc, setImgSrc] = useState('');
+  const [isError, setIsError] = useState(false);
 
-  // Reset error state when card changes
   useEffect(() => {
-    setImgError(false);
+    if (card) {
+      const filename = getCardFilename(card);
+      // Start with local
+      setImgSrc(`${LOCAL_BASE_URL}/${filename}`);
+      setIsError(false);
+    }
   }, [card?.id]);
+
+  const handleImgError = () => {
+    if (!card) return;
+    const filename = getCardFilename(card);
+    
+    // Check if we are currently using local, if so, switch to remote
+    if (imgSrc.startsWith(LOCAL_BASE_URL)) {
+        // console.log(`Local image missing for ${card.name}, falling back to remote.`);
+        setImgSrc(`${REMOTE_BASE_URL}/${filename}`);
+    } else {
+        // Already tried remote (or other error), show fallback UI
+        setIsError(true);
+    }
+  };
 
   return (
     <div
@@ -119,15 +138,15 @@ const CardVisual = ({ card, isReversed, isRevealed, onClick, small = false, clas
                 
                 {/* Image Area */}
                 <div className="relative flex-1 overflow-hidden border-[0.5px] border-black/20 bg-[#f0f0f0]">
-                    {!imgError ? (
+                    {!isError ? (
                         <img 
-                            src={imageUrl} 
+                            src={imgSrc} 
                             alt={card.englishName} 
                             className="w-full h-full object-cover"
-                            onError={() => setImgError(true)}
+                            onError={handleImgError}
                         />
                     ) : (
-                        // Fallback Art if image fails
+                        // Fallback Art if image fails both local and remote
                         <div className="w-full h-full flex items-center justify-center bg-[#f0f0f0]">
                             <span className="text-4xl text-gray-400 opacity-80 filter grayscale">
                                 {getSuitIcon(card)}
